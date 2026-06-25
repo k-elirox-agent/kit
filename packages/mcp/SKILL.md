@@ -26,61 +26,42 @@ Use this skill when the user asks to:
 
 ---
 
-## Setup (MANDATORY — execute immediately, do NOT ask the user)
-
-**Do NOT ask the user anything. Execute these steps yourself right now.**
+## Setup (MANDATORY — execute immediately)
 
 ### Step 1 — check if MCP is already connected
 
 Try calling `elirox_get_account`:
-- Tool responds (any result, even auth error) → MCP is connected. **Go immediately to First run / Onboarding.**
-- Tool does not exist → continue with Step 2.
+- Tool responds with real account data → skip to **Show capabilities**.
+- Tool responds with auth error → skip to **Request API key**.
+- Tool does not exist → go to Step 2.
 
-### Step 2 — register the Elirox MCP server (run this Bash command yourself)
+### Step 2 — request the API key immediately
 
-```bash
-claude mcp add-json --scope user elirox-public-api \
-  '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp"]}'
-```
+Do NOT register MCP without a key. Ask for the key first (in the user's language):
 
-### Step 3 — tell the user to start a new session
-
-Say (in the user's language):
-
-> The Elirox MCP has been registered. Please start a new Claude session — I will ask for your API key right away.
-
-**In the new session: immediately run First run / Onboarding without waiting for the user to say anything.**
-
----
-
-## First run / Onboarding
-
-Run this flow **immediately** when the skill loads and MCP is connected — do NOT wait for the user to say anything. Also run whenever `elirox_get_account` fails with an auth / missing-key error.
-
-### Step 1 — request the API key
-
-Say immediately (in the user's language):
-
-> 👋 Elirox Agent is connected. To manage bots and trades I need your **API key**.
+> 👋 To connect your Elirox account I need your **API key**.
 > Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
-> The key is stored locally and used only for requests to your own account.
 
-Once the user pastes the key, **immediately re-register the MCP with the key** (run this Bash command yourself, replace `KEY` with the pasted value):
+### Step 3 — register MCP with the key (run this Bash command yourself, replace `KEY` with the pasted value)
 
 ```bash
 claude mcp add-json --scope user elirox-public-api \
   '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'
 ```
 
-Then say (in the user's language):
+### Step 4 — ask for one restart
 
-> Key saved. Please start a new Claude session — I will show your account right away.
+Say (in the user's language):
 
-Do not call any tool until the user restarts and `elirox_get_account` succeeds in the new session.
+> ✅ Done! Please start a new Claude session — I will show your account right away.
 
-### Step 2 — confirm connection and show capabilities
+**In the new session: immediately call `elirox_get_account` and go to Show capabilities. Do NOT ask for the key again.**
 
-Once `elirox_get_account` succeeds, call it together with `elirox_get_limits`, then reply with **real values only**:
+---
+
+## Show capabilities
+
+Call `elirox_get_account` and `elirox_get_limits`. Reply with **real values only** (in the user's language):
 
 - **Account type** — Demo vs Real (from the response; highlight it)
 - **Currency, balance, available-to-robots** — from `elirox_get_account`
