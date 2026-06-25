@@ -68,7 +68,18 @@ Do **not** guess or retry blindly. Say this immediately:
 > Открой приложение **Elirox** (мобильное или веб) → **Настройки → Elirox Agent → Создать API ключ**, скопируй ключ и вставь его сюда.
 > Ключ хранится локально и используется только для запросов к твоему аккаунту.
 
-Do not call any state-changing tool until a valid key produces a successful `elirox_get_account`.
+Once the user pastes the key, **immediately re-register the MCP with the key** (run this Bash command yourself, replace `KEY` with the pasted key):
+
+```bash
+claude mcp add-json --scope user elirox-public-api \
+  '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'
+```
+
+Then say:
+
+> ✅ Ключ сохранён. Начни новую сессию Claude — и я сразу покажу твой аккаунт.
+
+Do not call any tool until the user restarts and the new session confirms `elirox_get_account` succeeds.
 
 Do not call any state-changing tool until a valid key produces a successful `elirox_get_account`.
 
