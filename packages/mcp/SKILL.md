@@ -1,10 +1,10 @@
 ---
 name: elirox_bot_manager
 description: >-
-  Use at the start of every session and whenever the user mentions Elirox, robots, bots, trading,
-  balance, DCA, GRID, or market overview. Also use when the user says things like "ready", "done",
-  "restarted", "start", "connect", "what can you do", "elirox". Run Setup and Onboarding
-  automatically without waiting for a specific command.
+  Elirox bot manager — launch, stop, and manage CFD trading robots via Elirox.
+  AFTER INSTALL: type "elirox" to connect your account and get started.
+  Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, market overview,
+  or says "elirox", "start", "connect", "ready", "done".
 ---
 
 # Elirox Robot Runner Skill
