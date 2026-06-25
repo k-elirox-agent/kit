@@ -97,13 +97,36 @@ Detect which applies — check in order:
 3. `~/.cursor/mcp.json` exists → Cursor
 4. `~/.config/opencode/config.json` exists → OpenCode
 
-### Step 4 — ask for one restart
+### Step 4 — show account immediately (no restart needed)
 
-Say in the same language the user wrote in:
+After registering MCP, do NOT ask the user to restart. Instead, call the Elirox API directly using the key the user just provided, and immediately output the Show capabilities template.
 
-> ✅ [Done / Готово / etc.]! Start a new session and type **"elirox"** — I will show your account right away.
+Use this Node.js script (replace `KEY` with the actual key):
 
-**In the new session: immediately (without waiting) call `elirox_get_account` and `elirox_get_limits`, then output the Show capabilities template. Do NOT show a generic menu. Do NOT ask what the user wants to do. Just show the account.**
+```bash
+node --input-type=module - <<'EOF'
+import { spawn } from 'child_process';
+const KEY = 'KEY';
+const child = spawn('npx', ['-y', 'mcp-remote', 'https://app.elxapi.com/public/v1/mcp', '--header', `Authorization: Bearer ${KEY}`], { stdio: ['pipe','pipe','pipe'] });
+let buf = Buffer.alloc(0), seq = 1;
+const pending = new Map();
+const send = obj => { const b = Buffer.from(JSON.stringify(obj)); child.stdin.write(`Content-Length: ${b.length}\r\n\r\n`); child.stdin.write(b); };
+const req = (method, params={}) => { const id=seq++; send({jsonrpc:'2.0',id,method,params}); return new Promise((res,rej)=>{ const t=setTimeout(()=>rej(new Error('timeout: '+method)),30000); pending.set(id,{res:v=>{clearTimeout(t);res(v);},rej:e=>{clearTimeout(t);rej(e);}}); }); };
+child.stdout.on('data', d => { buf=Buffer.concat([buf,d]); let h; while((h=buf.indexOf('\r\n\r\n'))>=0){ const m=buf.subarray(0,h).toString().match(/Content-Length: (\d+)/i); if(!m){buf=buf.subarray(h+4);continue;} const l=+m[1],s=h+4; if(buf.length<s+l)break; const msg=JSON.parse(buf.subarray(s,s+l).toString()); buf=buf.subarray(s+l); if(msg.id&&pending.has(msg.id)){ const p=pending.get(msg.id); pending.delete(msg.id); msg.error?p.rej(new Error(JSON.stringify(msg.error))):p.res(msg.result); } } });
+child.on('exit', c => { if(c) for(const p of pending.values()) p.rej(new Error('exit '+c)); });
+await req('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'skill',version:'1.0'}});
+send({jsonrpc:'2.0',method:'notifications/initialized',params:{}});
+const [account, limits] = await Promise.all([req('tools/call',{name:'elirox_get_account',arguments:{}}), req('tools/call',{name:'elirox_get_limits',arguments:{}})]);
+console.log(JSON.stringify({ account: JSON.parse(account.content[0].text), limits: JSON.parse(limits.content[0].text) }));
+child.kill();
+EOF
+```
+
+Parse the JSON output and proceed to **Show capabilities** with real values.
+
+After showing the onboarding, add one note (in user's language):
+
+> ℹ️ To use bot commands in future sessions, just type "elirox".
 
 ---
 
