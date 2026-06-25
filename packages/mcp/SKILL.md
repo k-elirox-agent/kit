@@ -103,45 +103,48 @@ Say in the same language the user wrote in:
 
 ## Show capabilities
 
-**MANDATORY. Do NOT show a generic list of options. Do NOT ask "what would you like to do?". Call the tools and output the template below — nothing else.**
+**MANDATORY output format. Follow exactly. No deviations.**
 
-Call `elirox_get_account` and `elirox_get_limits`. Then reply using **exactly this template** (translated to the user's language, real values only — never invent anything):
+Call `elirox_get_account` and `elirox_get_limits`.
 
----
+NEVER show: API rate limits, RPM, usage counts, request quotas, active bot count, internal fields.
+NEVER show a generic options list or ask "what would you like to do?".
 
-✅ Account connected — **{Demo or Real}**, {currency}
-Balance {balance} · Available to robots {availableToRobots}
-
-Permissions of this key:
-- {user-facing label} ✅
-- {user-facing label} ✅
-- {user-facing label} ✅
-
-What I can do now:
-- 🤖 Launch a bot (DCA / GRID)
-- 📈 Open a trade
-- 💰 Check balance and active bots
-
-✨ Try this:
-- 🤖 "Launch a bot where TradingView gives a strong buy signal"
-- 📈 "Open 30 trades at 0.01 lot on gold"
-- 📊 "Give me a market overview"
-- 🎓 "Explain how DCA / GRID works in Elirox"
-
-Where do we start?
+Output this and nothing else (translate to user's language, fill in real values):
 
 ---
 
-Rules:
-- **Account type**: read `brokerAccountType` — show "Demo" or "Real", make it bold
-- **Balance / availableToRobots**: from `elirox_get_account`
-- **Permissions**: read `scopes` from `elirox_get_limits`. Map to labels, show only meaningful ones — hide `quotes:read`, `limits:read`, `bots:read`, `trading:read`:
-  - `account:read` → "Account read access"
-  - `bots:write` → "Launch and manage bots"
-  - `trading:write` → "Open trades via terminal"
-- **What I can do**: only list actions whose scope is granted
-- **✨ Try this**: only show prompts whose scope is granted
-- Never show API rate limits, usage counts, or internal fields to the user
+✅ Аккаунт подключён — **Demo**, USD
+Баланс $53 025 · Доступно роботам $44 172
+
+Разрешения этого ключа:
+- Чтение счёта ✅
+- Запуск и управление ботами ✅
+- Открытие сделок через терминал ✅
+
+Что я умею:
+- 🤖 Запустить бота (DCA / GRID)
+- 📈 Открыть сделку
+- 💰 Проверить баланс и активных ботов
+
+✨ Попробуй:
+- 🤖 «Запусти бота там, где TradingView даёт strong buy»
+- 📈 «Открой 30 сделок по 0.01 лота на золоте»
+- 📊 «Сделай обзор рынка»
+- 🎓 «Объясни, как работает DCA / GRID в Elirox»
+
+С чего начнём?
+
+---
+
+Rules for filling in the template:
+- **Demo/Real**: from `brokerAccountType` field — make it bold
+- **Balance / availableToRobots**: from `accountInfo` inside `elirox_get_account`
+- **Permissions**: from `scopes` in `elirox_get_limits`. Map only these — skip everything else:
+  - `account:read` → "Account read access" / "Чтение счёта"
+  - `bots:write` → "Launch and manage bots" / "Запуск и управление ботами"
+  - `trading:write` → "Open trades via terminal" / "Открытие сделок через терминал"
+- Only list permissions and actions that are actually granted
 
 ---
 
