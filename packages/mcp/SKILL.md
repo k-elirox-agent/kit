@@ -160,7 +160,7 @@ What I can do:
 
 ✨ Try this:
 - 🤖 "{Launch a bot where TradingView gives a strong buy signal}"
-- 📈 "{Open 30 trades at 0.01 lot on gold}"
+- 📈 "{Open a trade on gold}"
 - 📊 "{Give me a market overview}"
 - 🎓 "{Explain how DCA / GRID works in Elirox}"
 
