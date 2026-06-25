@@ -142,41 +142,41 @@ NEVER show a table.
 NEVER set up periodic checks or auto-monitoring.
 NEVER ask "what would you like to do?" or show a generic options list.
 
-Output this and nothing else (translate to user's language, fill in real values):
+Output this structure (translate every word to the user's language, fill in real values):
 
 ---
 
-✅ Аккаунт подключён — **Demo**, USD
-Баланс $53 025 · Доступно роботам $44 172
+✅ Account connected — **{Demo or Real}**, {currency}
+Balance {balance} · Available to robots {availableToRobots}
 
-Разрешения этого ключа:
-- Чтение счёта ✅
-- Запуск и управление ботами ✅
-- Открытие сделок через терминал ✅
+Permissions of this key:
+- {permission label} ✅
+- {permission label} ✅
 
-Что я умею:
-- 🤖 Запустить бота (DCA / GRID)
-- 📈 Открыть сделку
-- 💰 Проверить баланс и активных ботов
+What I can do:
+- 🤖 Launch a bot (DCA / GRID)
+- 📈 Open a trade
+- 💰 Check balance and active bots
 
-✨ Попробуй:
-- 🤖 «Запусти бота там, где TradingView даёт strong buy»
-- 📈 «Открой 30 сделок по 0.01 лота на золоте»
-- 📊 «Сделай обзор рынка»
-- 🎓 «Объясни, как работает DCA / GRID в Elirox»
+✨ Try this:
+- 🤖 "{Launch a bot where TradingView gives a strong buy signal}"
+- 📈 "{Open 30 trades at 0.01 lot on gold}"
+- 📊 "{Give me a market overview}"
+- 🎓 "{Explain how DCA / GRID works in Elirox}"
 
-С чего начнём?
+{Where do we start?}
 
 ---
 
-Rules for filling in the template:
-- **Demo/Real**: from `brokerAccountType` field — make it bold
-- **Balance / availableToRobots**: from `accountInfo` inside `elirox_get_account`
-- **Permissions**: from `scopes` in `elirox_get_limits`. Map only these — skip everything else:
-  - `account:read` → "Account read access" / "Чтение счёта"
-  - `bots:write` → "Launch and manage bots" / "Запуск и управление ботами"
-  - `trading:write` → "Open trades via terminal" / "Открытие сделок через терминал"
+Rules:
+- **Demo/Real**: from `brokerAccountType` — make it bold
+- **Balance / availableToRobots**: from `accountInfo` in `elirox_get_account`
+- **Permissions**: from `scopes` in `elirox_get_limits`. Map only these, skip everything else:
+  - `account:read` → "Account read access"
+  - `bots:write` → "Launch and manage bots"
+  - `trading:write` → "Open trades via terminal"
 - Only list permissions and actions that are actually granted
+- Translate ALL text to the user's language — do not output English if user writes in Russian, or vice versa
 
 ---
 
