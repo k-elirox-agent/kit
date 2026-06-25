@@ -14,9 +14,9 @@ You help the user manage Elirox CFD trading robots through the connected MCP ser
 
 **Language:** always reply in the same language the user writes in. Auto-detect from their first message.
 
-**If the skill system fails to load this skill** (e.g. "Failed to run skill"): do NOT ask the user to restart. Instead, find and read this file directly:
+**If the skill system fails to load this skill** (e.g. "Failed to run skill"): do NOT ask the user to restart. Find and read the **full file** (no head/tail truncation):
 ```bash
-find ~ -path "*elirox_bot_manager/SKILL.md" 2>/dev/null | head -1
+cat "$(find ~ -path "*elirox_bot_manager/SKILL.md" 2>/dev/null | head -1)"
 ```
 Then follow the instructions in this file as if the skill loaded normally.
 
@@ -49,53 +49,12 @@ Do NOT register MCP without a key. Ask for the key first (in the user's language
 
 ### Step 3 — register MCP with the key
 
-Run commands yourself to detect the environment, then write to the right config. Replace `KEY` with the pasted value.
+Detect environment (check in order: `which claude` → Claude Code; `~/.codex/config.toml` exists → Codex; `~/.cursor/mcp.json` → Cursor; `~/.config/opencode/config.json` → OpenCode). Replace `KEY` with the pasted value, then run the matching command:
 
-**Claude Code** (`claude` command exists):
-```bash
-claude mcp add-json --scope user elirox-public-api \
-  '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'
-```
-
-**Codex** (`claude` not found, `~/.codex/config.toml` exists):
-```bash
-cat >> ~/.codex/config.toml << 'EOF'
-
-[mcp_servers."elirox-public-api"]
-command = "npx"
-args = ["-y", "mcp-remote", "https://app.elxapi.com/public/v1/mcp", "--header", "Authorization: Bearer KEY"]
-EOF
-```
-
-**Cursor** (`~/.cursor/mcp.json` exists — merge, don't overwrite):
-```bash
-node -e "
-const f='$HOME/.cursor/mcp.json';
-const fs=require('fs');
-const c=fs.existsSync(f)?JSON.parse(fs.readFileSync(f)):{}; 
-c.mcpServers=c.mcpServers||{};
-c.mcpServers['elirox-public-api']={command:'npx',args:['-y','mcp-remote','https://app.elxapi.com/public/v1/mcp','--header','Authorization: Bearer KEY']};
-fs.writeFileSync(f,JSON.stringify(c,null,2));
-"
-```
-
-**OpenCode** (`~/.config/opencode/config.json` exists — merge, don't overwrite):
-```bash
-node -e "
-const f=process.env.HOME+'/.config/opencode/config.json';
-const fs=require('fs');
-const c=fs.existsSync(f)?JSON.parse(fs.readFileSync(f)):{};
-c.mcp=c.mcp||{}; c.mcp.servers=c.mcp.servers||{};
-c.mcp.servers['elirox-public-api']={command:'npx',args:['-y','mcp-remote','https://app.elxapi.com/public/v1/mcp','--header','Authorization: Bearer KEY']};
-fs.writeFileSync(f,JSON.stringify(c,null,2));
-"
-```
-
-Detect which applies — check in order:
-1. `which claude` → Claude Code
-2. `~/.codex/config.toml` exists → Codex
-3. `~/.cursor/mcp.json` exists → Cursor
-4. `~/.config/opencode/config.json` exists → OpenCode
+- **Claude Code**: `claude mcp add-json --scope user elirox-public-api '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'`
+- **Codex**: append to `~/.codex/config.toml`: `[mcp_servers."elirox-public-api"]` / `command = "npx"` / `args = ["-y", "mcp-remote", "https://app.elxapi.com/public/v1/mcp", "--header", "Authorization: Bearer KEY"]`
+- **Cursor**: merge into `~/.cursor/mcp.json`: `{"mcpServers":{"elirox-public-api":{"command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}}}`
+- **OpenCode**: merge into `~/.config/opencode/config.json`: `{"mcp":{"servers":{"elirox-public-api":{"command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}}}}`
 
 ### Step 4 — show account immediately (no restart needed)
 
