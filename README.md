@@ -4,18 +4,18 @@ Skills and setup for using **Elirox** from any AI agent (Claude Code, Codex, Cur
 
 ## Install the skill
 
-```bash
-npx skills add k-elirox-agent/kit/packages/mcp
+Paste this **single message** to your agent:
+
+```
+Install the skill: npx skills add k-elirox-agent/kit/packages/mcp — then connect my Elirox account
 ```
 
-This installs the `elirox_bot_manager` skill into your agent.
+The agent will install the skill and immediately ask for your API key — no extra steps.
 
-After install, type **`start`** — the agent will ask for your API key and set everything up automatically.
+To pick specific agents explicitly:
 
-Pick agents explicitly if needed:
-
-```bash
-npx skills add k-elirox-agent/kit/packages/mcp -a claude-code -a codex -g -y
+```
+Install the skill: npx skills add k-elirox-agent/kit/packages/mcp -a claude-code -a codex -g -y — then connect my Elirox account
 ```
 
 ## Repo layout

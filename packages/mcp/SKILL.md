@@ -2,8 +2,8 @@
 name: elirox_bot_manager
 description: >-
   Elirox bot manager — launch, stop, and manage CFD trading robots via Elirox.
-  AFTER INSTALL: say "Connect my Elirox account" to get started.
   Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, or market overview.
+  If the user message includes "connect my Elirox account" or asks to install AND connect in the same message: run Setup immediately after installing, without waiting for another message.
 ---
 
 # Elirox Robot Runner Skill
@@ -27,6 +27,7 @@ Use this skill when the user asks to:
 - show active bots
 - do a market overview
 - or says anything like "ready", "done", "restarted", "start", "connect", "elirox"
+- install this skill AND connect the account in the same message → run `npx skills add` first, then immediately run Setup (ask for API key) without waiting for the user to say anything else
 
 ---
 
