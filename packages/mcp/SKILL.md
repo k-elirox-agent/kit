@@ -96,9 +96,9 @@ Detect which applies — check in order:
 
 Say (in the user's language):
 
-> ✅ Done! Please start a new session — I will show your account right away.
+> ✅ Done! Please **start a new session** and type **`elirox`** — I will show your account right away.
 
-**In the new session: immediately call `elirox_get_account` and go to Show capabilities. Do NOT ask for the key again.**
+**In the new session: as soon as the user types anything, immediately call `elirox_get_account` and go to Show capabilities. Do NOT ask for the key again.**
 
 ---
 
