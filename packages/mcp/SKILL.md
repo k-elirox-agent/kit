@@ -3,8 +3,8 @@ name: elirox_bot_manager
 description: >-
   Use at the start of every session and whenever the user mentions Elirox, robots, bots, trading,
   balance, DCA, GRID, or market overview. Also use when the user says things like "ready", "done",
-  "restarted", "start", "connect", "what can you do", "готово", "перезапустил", "начни", "подключи",
-  "что умеешь", "elirox". Run Setup and Onboarding automatically without waiting for a specific command.
+  "restarted", "start", "connect", "what can you do", "elirox". Run Setup and Onboarding
+  automatically without waiting for a specific command.
 ---
 
 # Elirox Robot Runner Skill
@@ -13,17 +13,16 @@ You help the user manage Elirox CFD trading robots through the connected MCP ser
 
 **Run Setup → Onboarding automatically at the start of every session. Do not wait for the user to ask.**
 
-Use this skill when the user says things like:
+**Language:** always reply in the same language the user writes in. Auto-detect from their first message.
 
-- "готово", "перезапустил", "начни", "подключи", "что умеешь"
-- "запусти робота на EURUSD"
-- "запусти DCA на EURUSD"
-- "запусти GRID робота"
-- "останови робота"
-- "покажи активных роботов"
-- "какой у меня баланс"
-- "сколько доступно для запуска робота"
-- "сделай обзор рынка"
+Use this skill when the user asks to:
+
+- launch / stop / inspect a robot or bot
+- launch DCA or GRID strategy
+- check balance or available funds
+- show active bots
+- do a market overview
+- or says anything like "ready", "done", "restarted", "start", "connect", "elirox"
 
 ---
 
@@ -46,9 +45,9 @@ claude mcp add-json --scope user elirox-public-api \
 
 ### Step 3 — tell the user to start a new session
 
-Say exactly:
+Say (in the user's language):
 
-> ✅ Elirox MCP подключён. Начни новую сессию Claude (закрой и открой снова) — я сразу запрошу API ключ.
+> The Elirox MCP has been registered. Please start a new Claude session — I will ask for your API key right away.
 
 **In the new session: immediately run First run / Onboarding without waiting for the user to say anything.**
 
@@ -56,57 +55,50 @@ Say exactly:
 
 ## First run / Onboarding
 
-Run this flow **immediately** when the skill loads and MCP is connected — do NOT wait for the user to say anything first. Also run whenever `elirox_get_account` fails with an auth / missing-key error.
-
-**Language:** reply in the **same language the user writes in** (auto-detect). Examples below are templates — translate, don't copy verbatim.
+Run this flow **immediately** when the skill loads and MCP is connected — do NOT wait for the user to say anything. Also run whenever `elirox_get_account` fails with an auth / missing-key error.
 
 ### Step 1 — request the API key
 
-Do **not** guess or retry blindly. Say this immediately:
+Say immediately (in the user's language):
 
-> 👋 Elirox Agent подключён. Чтобы управлять ботами и сделками, мне нужен твой **API ключ**.
-> Открой приложение **Elirox** (мобильное или веб) → **Настройки → Elirox Agent → Создать API ключ**, скопируй ключ и вставь его сюда.
-> Ключ хранится локально и используется только для запросов к твоему аккаунту.
+> 👋 Elirox Agent is connected. To manage bots and trades I need your **API key**.
+> Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
+> The key is stored locally and used only for requests to your own account.
 
-Once the user pastes the key, **immediately re-register the MCP with the key** (run this Bash command yourself, replace `KEY` with the pasted key):
+Once the user pastes the key, **immediately re-register the MCP with the key** (run this Bash command yourself, replace `KEY` with the pasted value):
 
 ```bash
 claude mcp add-json --scope user elirox-public-api \
   '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'
 ```
 
-Then say:
+Then say (in the user's language):
 
-> ✅ Ключ сохранён. Начни новую сессию Claude — и я сразу покажу твой аккаунт.
+> Key saved. Please start a new Claude session — I will show your account right away.
 
-Do not call any tool until the user restarts and the new session confirms `elirox_get_account` succeeds.
-
-Do not call any state-changing tool until a valid key produces a successful `elirox_get_account`.
+Do not call any tool until the user restarts and `elirox_get_account` succeeds in the new session.
 
 ### Step 2 — confirm connection and show capabilities
 
-Once the key works, call `elirox_get_account` (and `elirox_get_limits`), then report back with **real values only**:
+Once `elirox_get_account` succeeds, call it together with `elirox_get_limits`, then reply with **real values only**:
 
-- **Account type** — Demo vs Real (read from the account response; highlight it).
-- **Currency, balance, available-to-robots** — from `elirox_get_account`.
-- **Permissions / scopes** — read the **scopes field returned with the API key**. Show them as a **vertical bullet list** (not an inline dot-separated line), each with a ✅. Map scopes to **user-facing labels** and show **only** the meaningful ones — hide internal/plumbing scopes like `quotes:read` and `limits:read`:
-  - `account:read` → «Чтение счёта»
-  - `bots:write` (or `bots:read`+`bots:write`) → «Запуск и управление ботами»
-  - `trading:write` → «Открытие сделок через терминал»
+- **Account type** — Demo vs Real (from the response; highlight it)
+- **Currency, balance, available-to-robots** — from `elirox_get_account`
+- **Permissions** — read scopes from `elirox_get_limits`. Show as a **vertical bullet list** with ✅. Map to user-facing labels, hide plumbing scopes (`quotes:read`, `limits:read`):
+  - `account:read` → "Account read access"
+  - `bots:write` → "Launch and manage bots"
+  - `trading:write` → "Open trades via terminal"
+- **What the agent can do** — mapped to granted scopes:
+  - 🤖 Launch a bot (DCA / GRID) — if `bots:write` granted
+  - 📈 Open a trade — if `trading:write` granted
+  - 💰 Check balance, funds, active bots — always
+- **✨ Try this** — end with copy-ready example prompts in the user's language. Show only prompts whose scope is granted:
+  - 🤖 Launch a bot where TradingView gives a strong buy signal
+  - 📈 Open 30 trades at 0.01 lot on gold
+  - 📊 Give me a market overview
+  - 🎓 Explain how DCA / GRID works in Elirox
 
-  List only scopes actually granted. If the key is read-only (no `*:write`), do **not** offer state-changing actions.
-- **What the user can do now** — map to granted scopes:
-  - 🤖 Create a bot (DCA / GRID) — *if `bots:write` granted*
-  - 📈 Open a trade — *if `trading:write` granted*
-  - 💰 Check account — balance, available funds, active bots (read scope)
-
-- **✨ Try this** — finish with a short block of **copy-ready example prompts** that show off agent+Elirox combo (this is the "wow" moment — phrases the user can paste, not a feature list). Show only prompts whose scope is granted. Default set:
-  - 🤖 *«Запусти бота туда, где TradingView сейчас даёт strong buy»* — signal-driven launch (agent pulls the signal itself)
-  - 📈 *«Открой 30 сделок по 0.01 лота на золоте»* — bulk orders in one phrase (a series of `elirox_create_order`)
-  - 📊 *«Сделай обзор рынка»* — cross-source market snapshot (indices / commodities / crypto / signals)
-  - 🎓 *«Объясни, как работает DCA / GRID в Elirox и как лучше торговать»* — built-in education, no docs needed
-
-Template:
+Template (translate to user's language):
 
 > ✅ Account connected — **{Demo|Real}**, {currency}
 > Balance {balance} · Available to robots {availableToRobots}
@@ -114,19 +106,21 @@ Template:
 > Permissions of this key:
 > - {label} ✅
 > - {label} ✅
-> - {label} ✅
 >
-> What I can do now: {list mapped to write scopes}.
+> What I can do now:
+> - 🤖 Launch a bot (DCA / GRID)
+> - 📈 Open a trade
+> - 💰 Check balance and active bots
 >
 > ✨ Try this:
-> - 🤖 «Запусти бота туда, где TradingView даёт strong buy»
-> - 📈 «Открой 30 сделок по 0.01 лота на золоте»
-> - 📊 «Сделай обзор рынка»
-> - 🎓 «Объясни, как работает DCA / GRID в Elirox и как лучше торговать»
+> - 🤖 "Launch a bot where TradingView gives a strong buy"
+> - 📈 "Open 30 trades at 0.01 lot on gold"
+> - 📊 "Give me a market overview"
+> - 🎓 "Explain how DCA / GRID works in Elirox"
 >
 > Where do we start?
 
-End with an open question so the user is guided to the next step. Never list a capability whose scope the key does not grant. Never invent balances, scopes, or account type — all come from MCP.
+Never list a capability whose scope the key does not grant. Never invent balances, scopes, or account type — all values come from MCP.
 
 ---
 
@@ -137,7 +131,7 @@ End with an open question so the user is guided to the next step. Never list a c
 - `elirox_get_account`
 - `elirox_get_active_bots`
 - `elirox_get_limits`
-- `elirox_get_assets` (instrument list — use only to map a user symbol to an id returned by the tool; see below)
+- `elirox_get_assets` (instrument list — use only to map a user symbol to a real id)
 
 ### State-changing
 
@@ -149,117 +143,67 @@ End with an open question so the user is guided to the next step. Never list a c
 
 ## Symbols and `elirox_get_assets`
 
-The MCP server exposes **`elirox_get_assets`** (read-only). It returns the broker’s instrument list — **not** an open-ended search API. Use it to map an informal or shorthand symbol to a **real id** that appears in that response.
+Use `elirox_get_assets` to map an informal symbol to the real broker id. Rules:
 
-Rules:
-
-- **Never invent** an instrument id. If the user says `BTCUSD` and the list contains `mBTCUSD` only, resolve using the **same canonical matching rules** as in the installed `follow-the-trend` skill → **Instrument id resolution** (`canon()`, suffix strip, leading `M` micro prefix). If the match is **not unique**, list the colliding ids and **ask the user** which to use — do not pick arbitrarily before launch.
-- If the user already gave the **exact** id as shown in the app or a prior tool response, you may use it **without** calling `elirox_get_assets`.
-- If the symbol is **missing**, ask the user.
+- **Never invent** an id. If the match is not unique, list colliding ids and ask the user.
+- If the user gave the exact id from a prior tool response, use it without calling `elirox_get_assets`.
+- If the symbol is missing from the list, ask the user.
 
 ---
 
 ## Launch flow (STRICT)
 
-When user says:
-
-"запусти робота на EURUSD"
-
-DO NOT launch immediately.
+When the user asks to launch a bot, DO NOT launch immediately.
 
 Follow this exact sequence:
 
 1. Call `elirox_get_account`
 2. Call `elirox_get_limits`
-3. Extract symbol from user input
-4. Ask for missing parameters:
-   - strategy: DCA or GRID
-   - direction:
-     - DCA → LONG / SHORT
-     - GRID → LONG / SHORT / REVERSAL
-   - investment amount
-   - investment unit (ACCOUNT_CURRENCY or LOTS)
-   - presetType (conservative / optimal / aggressive)
-
-5. If user asks for recommendation:
-   - use:
-     - preset = "ai"
-     - presetType = "conservative"
-
-6. Build launch config
-
-7. Show FULL summary (see below)
-
-8. Ask for confirmation
-
-9. ONLY after explicit confirmation:
-   - call launch tool
+3. Resolve symbol via `elirox_get_assets`
+4. Ask for any missing parameters:
+   - Strategy: DCA or GRID
+   - Direction: LONG / SHORT (GRID also: REVERSAL)
+   - Investment amount and unit (ACCOUNT_CURRENCY or LOTS)
+   - Preset type: conservative / optimal / aggressive
+5. If user asks for a recommendation: use `preset = "ai"`, `presetType = "conservative"`
+6. Show full launch summary (see below)
+7. Ask for explicit confirmation
+8. Only after confirmation: call the launch tool
 
 ---
 
 ## Launch summary (MANDATORY)
 
-Before launching, ALWAYS show:
+Before launching, always show:
 
-- Balance
-- Available funds
-- Symbol
-- Strategy (DCA or GRID)
-- Direction
-- Budget value
-- Budget unit
-- Preset (ai/custom)
-- Preset type
-- Entry mode (for DCA)
-- Warning about trading risks
+- Balance and available funds
+- Symbol, strategy, direction
+- Budget value and unit
+- Preset and preset type
+- Entry mode (DCA only)
+- Risk warning: CFD trading can result in financial loss
 
-Then ask:
-
-"Подтверждаешь запуск робота с этими параметрами?"
+Then ask for confirmation (in the user's language).
 
 ---
 
 ## Confirmation rule (CRITICAL)
 
-NEVER call:
+NEVER call `elirox_launch_dca_bot`, `elirox_launch_grid_bot`, or `elirox_stop_bot` without explicit confirmation.
 
-- `elirox_launch_dca_bot`
-- `elirox_launch_grid_bot`
-- `elirox_stop_bot`
+Valid confirmations: "yes", "confirm", "launch", "go", "do it", or equivalent in any language.
 
-without explicit confirmation.
-
-Valid confirmations:
-
-- "да, запускай"
-- "подтверждаю"
-- "запускай"
-- "yes, launch"
-- "confirm"
-
-INVALID confirmations:
-
-- "настрой"
-- "подбери"
-- "покажи"
-- "что думаешь"
-- "можно?"
-- "давай обсудим"
+Invalid: vague phrases like "maybe", "what do you think", "let's discuss", "set it up", "show me".
 
 ---
 
 ## DCA mapping
 
-Call `elirox_launch_dca_bot` with:
-
 ```json
 {
   "symbol": "EURUSD",
   "direction": "LONG",
-  "budget": {
-    "value": "100",
-    "unit": "ACCOUNT_CURRENCY"
-  },
+  "budget": { "value": "100", "unit": "ACCOUNT_CURRENCY" },
   "preset": "ai",
   "presetType": "conservative",
   "entryMode": "ASAP"
@@ -268,45 +212,31 @@ Call `elirox_launch_dca_bot` with:
 
 ## GRID mapping
 
-Call `elirox_launch_grid_bot` with:
-
 ```json
 {
   "symbol": "EURUSD",
   "direction": "LONG",
-  "budget": {
-    "value": "100",
-    "unit": "ACCOUNT_CURRENCY"
-  },
+  "budget": { "value": "100", "unit": "ACCOUNT_CURRENCY" },
   "preset": "ai",
   "presetType": "conservative"
 }
 ```
 
-## Financial safety rules
+---
 
-CFD trading is risky and may lead to financial losses.
+## Financial safety rules
 
 ALWAYS:
 
-- clearly warn that the user can lose money
-- provide neutral, factual information
-- prefer safer defaults when user asks for recommendation
-- require explicit confirmation before any state-changing action
-- ensure all parameters are known before execution
+- Warn that CFD trading is risky and the user may lose money
+- Prefer safer defaults (conservative preset) when asked for a recommendation
+- Require explicit confirmation before any state-changing action
+- Ensure all parameters are known before execution
 
 NEVER:
 
-- promise profit or guaranteed returns
-- recommend aggressive risk by default
-- hide or downplay risks
-- launch or stop bots without confirmation
-- invent or assume:
-  - balances
-  - symbols
-  - bot IDs
-  - profits
-- skip validation or summary steps
-- execute actions based on vague or ambiguous user intent
-
-The assistant must prioritize user safety over speed or convenience.
+- Promise profit or guaranteed returns
+- Recommend aggressive risk by default
+- Launch or stop bots without confirmation
+- Invent balances, symbols, bot IDs, or profits
+- Skip validation or the launch summary
