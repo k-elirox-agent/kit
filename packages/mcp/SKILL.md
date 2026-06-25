@@ -95,7 +95,7 @@ Detect which applies — check in order:
 
 Say in the same language the user wrote in:
 
-> ✅ [Done / Готово / etc.]! Start a new session and say **"Launch Elirox agent"** — I will show your account right away.
+> ✅ [Done / Готово / etc.]! Start a new session and type **"elirox"** — I will show your account right away.
 
 **In the new session: immediately (without waiting) call `elirox_get_account` and `elirox_get_limits`, then output the Show capabilities template. Do NOT show a generic menu. Do NOT ask what the user wants to do. Just show the account.**
 
@@ -107,8 +107,10 @@ Say in the same language the user wrote in:
 
 Call `elirox_get_account` and `elirox_get_limits`.
 
-NEVER show: API rate limits, RPM, usage counts, request quotas, active bot count, internal fields.
-NEVER show a generic options list or ask "what would you like to do?".
+NEVER show: API rate limits, RPM, usage counts, request quotas, active bot count, P/L, internal fields.
+NEVER show a table.
+NEVER set up periodic checks or auto-monitoring.
+NEVER ask "what would you like to do?" or show a generic options list.
 
 Output this and nothing else (translate to user's language, fill in real values):
 
