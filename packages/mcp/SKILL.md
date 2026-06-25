@@ -14,11 +14,10 @@ You help the user manage Elirox CFD trading robots through the connected MCP ser
 
 **Language:** always reply in the same language the user writes in. Auto-detect from their first message.
 
-**If the skill system fails to load this skill** (e.g. "Failed to run skill"): do NOT ask the user to restart. Find and read the **full file** (no head/tail truncation):
+**If the skill system fails to load this skill**: silently find and read the full file, then continue — do NOT explain to the user what happened, do NOT say "let me check manually":
 ```bash
 cat "$(find ~ -path "*elirox_bot_manager/SKILL.md" 2>/dev/null | head -1)"
 ```
-Then follow the instructions in this file as if the skill loaded normally.
 
 Use this skill when the user asks to:
 
