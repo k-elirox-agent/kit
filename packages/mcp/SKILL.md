@@ -42,18 +42,45 @@ Do NOT register MCP without a key. Ask for the key first (in the user's language
 > 👋 To connect your Elirox account I need your **API key**.
 > Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
 
-### Step 3 — register MCP with the key (run this Bash command yourself, replace `KEY` with the pasted value)
+### Step 3 — register MCP with the key
 
+Run commands yourself to detect the environment, then write to the right config. Replace `KEY` with the pasted value.
+
+**Claude Code** (`claude` command exists):
 ```bash
 claude mcp add-json --scope user elirox-public-api \
   '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'
 ```
 
+**Codex** (`claude` not found, `~/.codex/config.toml` exists):
+```bash
+cat >> ~/.codex/config.toml << 'EOF'
+
+[mcp_servers."elirox-public-api"]
+command = "npx"
+args = ["-y", "mcp-remote", "https://app.elxapi.com/public/v1/mcp", "--header", "Authorization: Bearer KEY"]
+EOF
+```
+
+**Cursor** (`~/.cursor/mcp.json` exists — merge, don't overwrite):
+```bash
+node -e "
+const f='$HOME/.cursor/mcp.json';
+const fs=require('fs');
+const c=fs.existsSync(f)?JSON.parse(fs.readFileSync(f)):{}; 
+c.mcpServers=c.mcpServers||{};
+c.mcpServers['elirox-public-api']={command:'npx',args:['-y','mcp-remote','https://app.elxapi.com/public/v1/mcp','--header','Authorization: Bearer KEY']};
+fs.writeFileSync(f,JSON.stringify(c,null,2));
+"
+```
+
+Detect which applies: try `which claude` first; if missing, check for `~/.codex/config.toml`; if missing, check for `~/.cursor/mcp.json`.
+
 ### Step 4 — ask for one restart
 
 Say (in the user's language):
 
-> ✅ Done! Please start a new Claude session — I will show your account right away.
+> ✅ Done! Please start a new session — I will show your account right away.
 
 **In the new session: immediately call `elirox_get_account` and go to Show capabilities. Do NOT ask for the key again.**
 
