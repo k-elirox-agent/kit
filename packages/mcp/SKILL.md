@@ -95,7 +95,7 @@ Detect which applies — check in order:
 
 Say in the same language the user wrote in:
 
-> ✅ [Done / Готово / etc.]! Start a new session and type **"elirox"** — I will show your account right away.
+> ✅ [Done / Готово / etc.]! Start a new session and say **"Launch Elirox agent"** — I will show your account right away.
 
 **In the new session: immediately (without waiting) call `elirox_get_account` and `elirox_get_limits`, then output the Show capabilities template. Do NOT show a generic menu. Do NOT ask what the user wants to do. Just show the account.**
 
