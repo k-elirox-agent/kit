@@ -2,9 +2,9 @@
 name: elirox_bot_manager
 description: >-
   Elirox bot manager — launch, stop, and manage CFD trading robots via Elirox.
-  AFTER INSTALL: type "elirox" to connect your account and get started.
+  AFTER INSTALL: say "Давай настроим Elirox" to connect your account and get started.
   Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, market overview,
-  or says "elirox", "start", "connect", "ready", "done".
+  or says "elirox", "Запусти агента Elirox", "Давай настроим Elirox", "start", "connect".
 ---
 
 # Elirox Robot Runner Skill
@@ -94,15 +94,21 @@ Detect which applies — check in order:
 
 ### Step 4 — ask for one restart
 
-Say (in the user's language):
+Say in the same language the user wrote in. Example in Russian:
 
-> ✅ Done! Please **start a new session** and type **`elirox`** — I will show your account right away.
+> ✅ Готово! Начни новую сессию и напиши **«Запусти агента Elirox»** — я сразу покажу твой аккаунт.
 
-**In the new session: as soon as the user types anything, immediately call `elirox_get_account` and go to Show capabilities. Do NOT ask for the key again.**
+Example in English:
+
+> ✅ Done! Start a new session and say **"Launch Elirox agent"** — I will show your account right away.
+
+**In the new session: immediately (without waiting) call `elirox_get_account` and `elirox_get_limits`, then output the Show capabilities template. Do NOT show a generic menu. Do NOT ask what the user wants to do. Just show the account.**
 
 ---
 
 ## Show capabilities
+
+**MANDATORY. Do NOT show a generic list of options. Do NOT ask "what would you like to do?". Call the tools and output the template below — nothing else.**
 
 Call `elirox_get_account` and `elirox_get_limits`. Then reply using **exactly this template** (translated to the user's language, real values only — never invent anything):
 
