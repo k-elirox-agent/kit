@@ -42,7 +42,7 @@ Try calling `elirox_get_account`:
 
 ### Step 2 — request the API key immediately
 
-Do NOT register MCP without a key. Ask for the key first (in the user's language):
+Do NOT register MCP without a key. Ask for the key first (in the user's language). Use **exactly** this path — do not paraphrase or invent a different location:
 
 > 👋 To connect your Elirox account I need your **API key**.
 > Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
@@ -101,18 +101,19 @@ Detect which applies — check in order:
 
 After registering MCP, do NOT ask the user to restart. Instead, call the Elirox API directly using the key the user just provided, and immediately output the Show capabilities template.
 
-Use this Node.js script (replace `KEY` with the actual key):
+Use this Node.js script (replace `KEY` with the actual key). mcp-remote uses **newline-delimited JSON**, not Content-Length framing:
 
 ```bash
 node --input-type=module - <<'EOF'
 import { spawn } from 'child_process';
 const KEY = 'KEY';
 const child = spawn('npx', ['-y', 'mcp-remote', 'https://app.elxapi.com/public/v1/mcp', '--header', `Authorization: Bearer ${KEY}`], { stdio: ['pipe','pipe','pipe'] });
-let buf = Buffer.alloc(0), seq = 1;
+child.stderr.on('data', d => process.stderr.write(d));
+let buf = '', seq = 1;
 const pending = new Map();
-const send = obj => { const b = Buffer.from(JSON.stringify(obj)); child.stdin.write(`Content-Length: ${b.length}\r\n\r\n`); child.stdin.write(b); };
-const req = (method, params={}) => { const id=seq++; send({jsonrpc:'2.0',id,method,params}); return new Promise((res,rej)=>{ const t=setTimeout(()=>rej(new Error('timeout: '+method)),30000); pending.set(id,{res:v=>{clearTimeout(t);res(v);},rej:e=>{clearTimeout(t);rej(e);}}); }); };
-child.stdout.on('data', d => { buf=Buffer.concat([buf,d]); let h; while((h=buf.indexOf('\r\n\r\n'))>=0){ const m=buf.subarray(0,h).toString().match(/Content-Length: (\d+)/i); if(!m){buf=buf.subarray(h+4);continue;} const l=+m[1],s=h+4; if(buf.length<s+l)break; const msg=JSON.parse(buf.subarray(s,s+l).toString()); buf=buf.subarray(s+l); if(msg.id&&pending.has(msg.id)){ const p=pending.get(msg.id); pending.delete(msg.id); msg.error?p.rej(new Error(JSON.stringify(msg.error))):p.res(msg.result); } } });
+const send = obj => { child.stdin.write(JSON.stringify(obj) + '\n'); };
+const req = (method, params={}) => { const id=seq++; send({jsonrpc:'2.0',id,method,params}); return new Promise((res,rej)=>{ const t=setTimeout(()=>rej(new Error('timeout: '+method)),60000); pending.set(id,{res:v=>{clearTimeout(t);res(v);},rej:e=>{clearTimeout(t);rej(e);}}); }); };
+child.stdout.on('data', d => { buf+=d.toString(); let nl; while((nl=buf.indexOf('\n'))>=0){ const line=buf.slice(0,nl).trim(); buf=buf.slice(nl+1); if(!line) continue; try{ const msg=JSON.parse(line); if(msg.id&&pending.has(msg.id)){ const p=pending.get(msg.id); pending.delete(msg.id); msg.error?p.rej(new Error(JSON.stringify(msg.error))):p.res(msg.result); } }catch{} } });
 child.on('exit', c => { if(c) for(const p of pending.values()) p.rej(new Error('exit '+c)); });
 await req('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'skill',version:'1.0'}});
 send({jsonrpc:'2.0',method:'notifications/initialized',params:{}});
