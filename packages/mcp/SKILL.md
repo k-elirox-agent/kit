@@ -74,7 +74,23 @@ fs.writeFileSync(f,JSON.stringify(c,null,2));
 "
 ```
 
-Detect which applies: try `which claude` first; if missing, check for `~/.codex/config.toml`; if missing, check for `~/.cursor/mcp.json`.
+**OpenCode** (`~/.config/opencode/config.json` exists — merge, don't overwrite):
+```bash
+node -e "
+const f=process.env.HOME+'/.config/opencode/config.json';
+const fs=require('fs');
+const c=fs.existsSync(f)?JSON.parse(fs.readFileSync(f)):{};
+c.mcp=c.mcp||{}; c.mcp.servers=c.mcp.servers||{};
+c.mcp.servers['elirox-public-api']={command:'npx',args:['-y','mcp-remote','https://app.elxapi.com/public/v1/mcp','--header','Authorization: Bearer KEY']};
+fs.writeFileSync(f,JSON.stringify(c,null,2));
+"
+```
+
+Detect which applies — check in order:
+1. `which claude` → Claude Code
+2. `~/.codex/config.toml` exists → Codex
+3. `~/.cursor/mcp.json` exists → Cursor
+4. `~/.config/opencode/config.json` exists → OpenCode
 
 ### Step 4 — ask for one restart
 
