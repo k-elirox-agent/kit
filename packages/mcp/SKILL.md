@@ -2,7 +2,7 @@
 name: elirox_bot_manager
 description: >-
   Elirox bot manager — launch, stop, and manage CFD trading robots via Elirox.
-  AFTER INSTALL: type "elirox" to connect your account and get started.
+  AFTER INSTALL: say "Connect my Elirox account" to get started.
   Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, or market overview.
 ---
 
