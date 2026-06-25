@@ -104,47 +104,43 @@ Say (in the user's language):
 
 ## Show capabilities
 
-Call `elirox_get_account` and `elirox_get_limits`. Reply with **real values only** (in the user's language):
+Call `elirox_get_account` and `elirox_get_limits`. Then reply using **exactly this template** (translated to the user's language, real values only — never invent anything):
 
-- **Account type** — Demo vs Real (from the response; highlight it)
-- **Currency, balance, available-to-robots** — from `elirox_get_account`
-- **Permissions** — read scopes from `elirox_get_limits`. Show as a **vertical bullet list** with ✅. Map to user-facing labels, hide plumbing scopes (`quotes:read`, `limits:read`):
+---
+
+✅ Account connected — **{Demo or Real}**, {currency}
+Balance {balance} · Available to robots {availableToRobots}
+
+Permissions of this key:
+- {user-facing label} ✅
+- {user-facing label} ✅
+- {user-facing label} ✅
+
+What I can do now:
+- 🤖 Launch a bot (DCA / GRID)
+- 📈 Open a trade
+- 💰 Check balance and active bots
+
+✨ Try this:
+- 🤖 "Launch a bot where TradingView gives a strong buy signal"
+- 📈 "Open 30 trades at 0.01 lot on gold"
+- 📊 "Give me a market overview"
+- 🎓 "Explain how DCA / GRID works in Elirox"
+
+Where do we start?
+
+---
+
+Rules:
+- **Account type**: read `brokerAccountType` — show "Demo" or "Real", make it bold
+- **Balance / availableToRobots**: from `elirox_get_account`
+- **Permissions**: read `scopes` from `elirox_get_limits`. Map to labels, show only meaningful ones — hide `quotes:read`, `limits:read`, `bots:read`, `trading:read`:
   - `account:read` → "Account read access"
   - `bots:write` → "Launch and manage bots"
   - `trading:write` → "Open trades via terminal"
-- **What the agent can do** — mapped to granted scopes:
-  - 🤖 Launch a bot (DCA / GRID) — if `bots:write` granted
-  - 📈 Open a trade — if `trading:write` granted
-  - 💰 Check balance, funds, active bots — always
-- **✨ Try this** — end with copy-ready example prompts in the user's language. Show only prompts whose scope is granted:
-  - 🤖 Launch a bot where TradingView gives a strong buy signal
-  - 📈 Open 30 trades at 0.01 lot on gold
-  - 📊 Give me a market overview
-  - 🎓 Explain how DCA / GRID works in Elirox
-
-Template (translate to user's language):
-
-> ✅ Account connected — **{Demo|Real}**, {currency}
-> Balance {balance} · Available to robots {availableToRobots}
->
-> Permissions of this key:
-> - {label} ✅
-> - {label} ✅
->
-> What I can do now:
-> - 🤖 Launch a bot (DCA / GRID)
-> - 📈 Open a trade
-> - 💰 Check balance and active bots
->
-> ✨ Try this:
-> - 🤖 "Launch a bot where TradingView gives a strong buy"
-> - 📈 "Open 30 trades at 0.01 lot on gold"
-> - 📊 "Give me a market overview"
-> - 🎓 "Explain how DCA / GRID works in Elirox"
->
-> Where do we start?
-
-Never list a capability whose scope the key does not grant. Never invent balances, scopes, or account type — all values come from MCP.
+- **What I can do**: only list actions whose scope is granted
+- **✨ Try this**: only show prompts whose scope is granted
+- Never show API rate limits, usage counts, or internal fields to the user
 
 ---
 
