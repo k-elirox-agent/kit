@@ -25,50 +25,46 @@ Use this skill when the user asks things like:
 
 ## Setup (MANDATORY — execute immediately, do NOT ask the user)
 
-**Do NOT ask the user how to install the MCP. Do NOT wait. Execute these steps yourself right now.**
+**Do NOT ask the user anything. Execute these steps yourself right now.**
 
 ### Step 1 — check if MCP is already connected
 
-If the tool `elirox_get_account` is available in this session (even if it returns an error) → MCP is already connected. **Skip to First run / Onboarding.**
+Try calling `elirox_get_account`:
+- Tool responds (any result, even auth error) → MCP is connected. **Go immediately to First run / Onboarding.**
+- Tool does not exist → continue with Step 2.
 
-If the tool is NOT available → continue with Step 2.
-
-### Step 2 — find the mock server (run this Bash command yourself)
-
-```bash
-find ~ -name "elirox-mock-mcp.mjs" 2>/dev/null | head -1
-```
-
-### Step 3 — register the MCP server (run this Bash command yourself, replace PATH with Step 2 result)
+### Step 2 — register the Elirox MCP server (run this Bash command yourself)
 
 ```bash
 claude mcp add-json --scope user elirox-public-api \
-  '{"type":"stdio","command":"node","args":["PATH"],"env":{"ELIROX_MOCK_SCENARIO":"no-key"}}'
+  '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp"]}'
 ```
 
-### Step 4 — tell the user to start a new session
+### Step 3 — tell the user to start a new session
 
 Say exactly:
 
-> ✅ Elirox Agent подключён. Начни новую сессию Claude (закрой и открой снова) — онбординг запустится автоматически.
+> ✅ Elirox MCP подключён. Начни новую сессию Claude (закрой и открой снова) — я сразу запрошу API ключ.
 
-**Do NOT skip any step. Do NOT ask the user for the path or for instructions — find and execute everything yourself.**
+**In the new session: immediately run First run / Onboarding without waiting for the user to say anything.**
 
 ---
 
 ## First run / Onboarding
 
-Run this flow the **first time** the user interacts after connecting the MCP, or whenever a read-only call (e.g. `elirox_get_account`) fails with an **auth / missing-key** error.
+Run this flow **immediately** when the skill loads and MCP is connected — do NOT wait for the user to say anything first. Also run whenever `elirox_get_account` fails with an auth / missing-key error.
 
 **Language:** reply in the **same language the user writes in** (auto-detect). Examples below are templates — translate, don't copy verbatim.
 
 ### Step 1 — request the API key
 
-If there is no working key yet, do **not** guess or retry blindly. Ask for it once, with the exact path:
+Do **not** guess or retry blindly. Say this immediately:
 
-> 👋 Elirox Agent is connected. To manage bots and trades I need your **API key**.
-> Open the **Elirox app** — the **mobile app** or the **web app** — and go to **Settings → Elirox Agent → Create API Key**, copy the key, and paste it here.
-> The key is stored locally and used only for requests to your own account.
+> 👋 Elirox Agent подключён. Чтобы управлять ботами и сделками, мне нужен твой **API ключ**.
+> Открой приложение **Elirox** (мобильное или веб) → **Настройки → Elirox Agent → Создать API ключ**, скопируй ключ и вставь его сюда.
+> Ключ хранится локально и используется только для запросов к твоему аккаунту.
+
+Do not call any state-changing tool until a valid key produces a successful `elirox_get_account`.
 
 Do not call any state-changing tool until a valid key produces a successful `elirox_get_account`.
 
