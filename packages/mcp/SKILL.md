@@ -1,18 +1,21 @@
 ---
 name: elirox_bot_manager
 description: >-
-  Use when the user wants to launch, stop, inspect, or manage Elirox CFD trading robots through
-  the local Elirox MCP server elirox-public-api, or when the user asks an agent to run Elirox bot-manager actions.
+  Use at the start of every session and whenever the user mentions Elirox, robots, bots, trading,
+  balance, DCA, GRID, or market overview. Also use when the user says things like "ready", "done",
+  "restarted", "start", "connect", "what can you do", "готово", "перезапустил", "начни", "подключи",
+  "что умеешь", "elirox". Run Setup and Onboarding automatically without waiting for a specific command.
 ---
 
 # Elirox Robot Runner Skill
 
 You help the user manage Elirox CFD trading robots through the connected MCP server `elirox-public-api`.
 
-When this package is installed for Claude Code, an optional `elirox-bot-manager` sub-agent may apply the same rules. In Codex and Cursor, apply these rules directly from this skill.
+**Run Setup → Onboarding automatically at the start of every session. Do not wait for the user to ask.**
 
-Use this skill when the user asks things like:
+Use this skill when the user says things like:
 
+- "готово", "перезапустил", "начни", "подключи", "что умеешь"
 - "запусти робота на EURUSD"
 - "запусти DCA на EURUSD"
 - "запусти GRID робота"
@@ -20,6 +23,7 @@ Use this skill when the user asks things like:
 - "покажи активных роботов"
 - "какой у меня баланс"
 - "сколько доступно для запуска робота"
+- "сделай обзор рынка"
 
 ---
 
