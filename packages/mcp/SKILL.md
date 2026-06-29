@@ -36,8 +36,8 @@ Use this skill when the user asks to:
 ### Step 1 — check if MCP is already connected
 
 Try calling `elirox_get_account`:
-- Tool responds with real account data → skip to **Show capabilities**.
-- Tool responds with auth error → skip to **Request API key**.
+- Tool responds with real account data → returning user, already connected. Do NOT dump the full capabilities card. Just give a one-line ready greeting in the user's language (e.g. "✅ Elirox connected — what do we do?") and stop. Only run **Show capabilities** if the user explicitly asks what you can do.
+- Tool responds with auth error → key is invalid/expired. Skip to **Request API key**, then in Step 3 remove the existing server before re-adding.
 - Tool does not exist → go to Step 2.
 
 ### Step 2 — request the API key immediately
@@ -49,7 +49,11 @@ Do NOT register MCP without a key. Ask for the key first (in the user's language
 
 ### Step 3 — register MCP with the key
 
-Detect environment (check in order: `which claude` → Claude Code; `~/.codex/config.toml` exists → Codex; `~/.cursor/mcp.json` → Cursor; `~/.config/opencode/config.json` → OpenCode). Replace `KEY` with the pasted value, then run the matching command:
+Detect environment (check in order: `which claude` → Claude Code; `~/.codex/config.toml` exists → Codex; `~/.cursor/mcp.json` → Cursor; `~/.config/opencode/config.json` → OpenCode). Replace `KEY` with the pasted value, then run the matching command.
+
+**If this is a key change (Step 1 returned an auth error), first remove the stale server** so the new key takes effect — e.g. Claude Code: `claude mcp remove elirox-public-api --scope user`; other envs: delete the existing `elirox-public-api` entry from the config file before adding.
+
+
 
 - **Claude Code**: `claude mcp add-json --scope user elirox-public-api '{"type":"stdio","command":"npx","args":["-y","mcp-remote","https://app.elxapi.com/public/v1/mcp","--header","Authorization: Bearer KEY"]}'`
 - **Codex**: append to `~/.codex/config.toml`: `[mcp_servers."elirox-public-api"]` / `command = "npx"` / `args = ["-y", "mcp-remote", "https://app.elxapi.com/public/v1/mcp", "--header", "Authorization: Bearer KEY"]`
