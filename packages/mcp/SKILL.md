@@ -36,8 +36,9 @@ Use this skill when the user asks to:
 ### Step 1 — check if MCP is already connected
 
 Try calling `elirox_get_account`:
-- Tool responds with real account data → returning user, already connected. Do NOT dump the full capabilities card. Just give a one-line ready greeting in the user's language (e.g. "✅ Elirox connected — what do we do?") and stop. Only run **Show capabilities** if the user explicitly asks what you can do.
-- Tool responds with auth error → key is invalid/expired. Skip to **Request API key**, then in Step 3 remove the existing server before re-adding.
+- Returns real account data → returning user, already connected. Do NOT dump the full capabilities card. Just give a one-line ready greeting in the user's language (e.g. "✅ Elirox connected — what do we do?") and stop. Only run **Show capabilities** if the user explicitly asks what you can do.
+- Permission / scope error, but the key is otherwise valid → confirm by calling `elirox_get_limits`; if it returns scopes, the key works but has no `account:read`. Enter **Privacy mode** (see below). This is NOT a failure — do not ask for a new key.
+- Auth / invalid-key error AND `elirox_get_limits` also fails → key is invalid/expired. Skip to **Request API key**, then in Step 3 remove the existing server before re-adding.
 - Tool does not exist → go to Step 2.
 
 ### Step 2 — request the API key immediately
@@ -80,13 +81,15 @@ child.stdout.on('data', d => { buf+=d.toString(); let nl; while((nl=buf.indexOf(
 child.on('exit', c => { if(c) for(const p of pending.values()) p.rej(new Error('exit '+c)); });
 await req('initialize',{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'skill',version:'1.0'}});
 send({jsonrpc:'2.0',method:'notifications/initialized',params:{}});
-const [account, limits] = await Promise.all([req('tools/call',{name:'elirox_get_account',arguments:{}}), req('tools/call',{name:'elirox_get_limits',arguments:{}})]);
-console.log(JSON.stringify({ account: JSON.parse(account.content[0].text), limits: JSON.parse(limits.content[0].text) }));
+const limits = await req('tools/call',{name:'elirox_get_limits',arguments:{}});
+let account = null;
+try { const a = await req('tools/call',{name:'elirox_get_account',arguments:{}}); account = JSON.parse(a.content[0].text); } catch { account = { error: 'no_read_permission' }; }
+console.log(JSON.stringify({ account, limits: JSON.parse(limits.content[0].text) }));
 child.kill();
 EOF
 ```
 
-Parse the JSON output and proceed to **Show capabilities** with real values.
+Parse the JSON output and proceed to **Show capabilities** with real values. If `account.error === 'no_read_permission'`, enter **Privacy mode** instead (see below) — the key can trade but cannot read the balance.
 
 After showing the onboarding, add one note (in user's language):
 
@@ -143,6 +146,19 @@ Rules:
 
 ---
 
+## Privacy mode — no `account:read`
+
+If the key can trade (`bots:write` / `trading:write`) but has NO `account:read`, the user has deliberately chosen not to expose their balance. This is a valid setup — do NOT fail, and do NOT nag them to add read access.
+
+- **Onboarding**: skip the balance line. Show a short card: connected, account type if known, the granted actions (launch bots / open trades), and one note — "Balance is hidden (no read access). I can still launch bots and open trades."
+- **Balance / account questions** ("what's my balance", "how much is available", "show my account"): answer immediately that you don't have permission to read the account — you can launch bots and open trades, but cannot see balance. Offer: grant `account:read` in the key if they want balance visible. Do NOT retry `elirox_get_account`.
+- **Launching a bot / opening a trade**: you cannot read the balance, so you cannot suggest or validate an amount. **ASK the user for the investment amount and unit explicitly.** Then follow the normal **Launch flow**, with these changes:
+  - Omit the balance / available-funds lines from the launch summary — you don't have them. Everything else stays: symbol, strategy, direction, budget, preset, entry mode, risk warning.
+  - Explicit confirmation is still MANDATORY.
+  - The amount is the user's responsibility — you are trading without balance visibility. State this once in the summary. If the launch tool returns an insufficient-funds error, relay it plainly.
+
+---
+
 ## MCP tools
 
 ### Read-only
@@ -176,7 +192,7 @@ When the user asks to launch a bot, DO NOT launch immediately.
 
 Follow this exact sequence:
 
-1. Call `elirox_get_account`
+1. Call `elirox_get_account` — *if the key has no `account:read` (Privacy mode), skip this and ask the user for the investment amount explicitly instead*
 2. Call `elirox_get_limits`
 3. Resolve symbol via `elirox_get_assets`
 4. Ask for any missing parameters:
