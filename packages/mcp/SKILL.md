@@ -61,7 +61,7 @@ child.kill();
 EOF
 ```
 
-After the card, add one note (user's language): "ℹ️ Next time, just type "elirox" to jump back in."
+After the card, set expectations in one note (user's language): the account is connected and readable now, but the **trading tools load only when the session starts** — so to place trades or launch bots you need to **restart the session once** (this first time). After that, just type "elirox" to jump back in. If the user then asks to trade before restarting, remind them briefly (not alarming) that one restart is needed to load the tools — it's a one-time step, not an error.
 
 ---
 
