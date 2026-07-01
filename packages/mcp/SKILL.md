@@ -214,6 +214,7 @@ Keep it short and helpful, never pushy. One clear recommendation, not a full pri
 - `elirox_create_order` — open a trade / place an order
 - `elirox_close_order` — close an open position
 - `elirox_cancel_order` — cancel a pending order
+- (no dedicated "modify order" tool — see **Editing / modifying an order** below)
 
 **Do not guess this tool's parameters. Read the actual `elirox_create_order` tool schema (name, side/direction, volume, order type, SL/TP, etc.) and fill only the fields it defines.** Never invent field names for a real-money order.
 
@@ -286,6 +287,15 @@ If the user asks for **many identical orders** (e.g. "open 50 trades of 0.01 lot
 - First clarify intent: 50 identical market orders on one symbol is usually just one larger position split up. Ask whether they want **one position of the combined size**, **a DCA/GRID bot** (server-side, costs ~1 write), or genuinely **N separate orders**.
 - Warn about the write cost: **each order is 1 write** against `writeRpd`. 50 orders = 50 writes — tell them how much of their daily limit that uses (e.g. "half of your Free-plan 100/day").
 - Never fire a loop of orders without an explicit confirmed count. Confirm the exact number and per-order size once, then proceed.
+
+### Editing / modifying an order
+
+There is no single "modify order" tool. If the live `elirox_create_order` / `elirox_close_order` schema exposes update or SL/TP fields, prefer those. Otherwise edit by combining primitives — and always confirm first:
+
+- **Pending (not-yet-filled) order** — to change price, volume, or SL/TP: `elirox_cancel_order` the old one, then `elirox_create_order` with the new parameters.
+- **Open position** — to reduce size: `elirox_close_order` partially. To add size: `elirox_create_order` more. To change SL/TP: use the SL/TP fields if the schema has them; otherwise close and reopen.
+- Show a clear **before → after** diff (old params → new params) and get one explicit confirmation before touching anything.
+- Never cancel-then-recreate silently. Between cancel and create the price can move, so the user must approve the new order first. If the cancel succeeds but the re-create fails, tell the user plainly that the old order is gone and nothing new was placed.
 
 ---
 
