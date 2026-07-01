@@ -207,16 +207,30 @@ Keep it short and helpful, never pushy. One clear recommendation, not a full pri
 
 - `elirox_launch_dca_bot`
 - `elirox_launch_grid_bot`
+- `elirox_launch_tradingview_bot` — mirrors a TradingView strategy (see TradingView flow below)
 - `elirox_stop_bot`
+
+### TradingView
+
+- `elirox_get_tradingview_webhook` — issue / return the account's TradingView webhook
 
 ### State-changing — direct trades
 
 - `elirox_create_order` — open a trade / place an order
-- `elirox_close_order` — close an open position
-- `elirox_cancel_order` — cancel a pending order
+- `elirox_close_order` — close an open position (takes `orderId`)
+- `elirox_cancel_order` — cancel a pending order (takes `orderId`)
 - (no dedicated "modify order" tool — see **Editing / modifying an order** below)
 
-**Do not guess this tool's parameters. Read the actual `elirox_create_order` tool schema (name, side/direction, volume, order type, SL/TP, etc.) and fill only the fields it defines.** Never invent field names for a real-money order.
+**`elirox_create_order` parameters** (verified against the live schema; required: `symbol`, `type`, `volume`):
+
+- `symbol` (string) — resolve via `elirox_get_assets`
+- `type` (enum) — `ORDER_TYPE_BUY` / `ORDER_TYPE_SELL` for market, `ORDER_TYPE_LIMIT_BUY` / `ORDER_TYPE_LIMIT_SELL` for limit
+- `volume` (number, lots, > 0)
+- `limitPrice` (number) — required for the LIMIT order types
+- `takeProfitPrice` (number, optional)
+- `stopLossPrice` (number, optional)
+
+`elirox_close_order` and `elirox_cancel_order` each take a single `orderId` (string). Get the id from `elirox_get_opened_orders` (to close) or `elirox_get_pending_orders` (to cancel) — never invent an order id. If the live schema ever differs from the above, the live schema wins.
 
 ---
 
@@ -301,7 +315,7 @@ There is no single "modify order" tool. If the live `elirox_create_order` / `eli
 
 ## Confirmation rule (CRITICAL)
 
-NEVER call any state-changing tool without explicit confirmation: `elirox_launch_dca_bot`, `elirox_launch_grid_bot`, `elirox_stop_bot`, `elirox_create_order`, `elirox_close_order`, `elirox_cancel_order`.
+NEVER call any state-changing tool without explicit confirmation: `elirox_launch_dca_bot`, `elirox_launch_grid_bot`, `elirox_launch_tradingview_bot`, `elirox_stop_bot`, `elirox_create_order`, `elirox_close_order`, `elirox_cancel_order`.
 
 Valid confirmations: "yes", "confirm", "launch", "go", "do it", or equivalent in any language.
 
@@ -333,6 +347,47 @@ Invalid: vague phrases like "maybe", "what do you think", "let's discuss", "set 
   "presetType": "conservative"
 }
 ```
+
+## Order mapping (`elirox_create_order`)
+
+Market buy 0.01 lot of gold with a stop-loss:
+
+```json
+{
+  "symbol": "XAUUSD",
+  "type": "ORDER_TYPE_BUY",
+  "volume": 0.01,
+  "stopLossPrice": 2300.0
+}
+```
+
+Limit sell (needs `limitPrice`):
+
+```json
+{
+  "symbol": "EURUSD",
+  "type": "ORDER_TYPE_LIMIT_SELL",
+  "volume": 0.10,
+  "limitPrice": 1.1200,
+  "takeProfitPrice": 1.1100
+}
+```
+
+Close / cancel by id (from `elirox_get_opened_orders` / `elirox_get_pending_orders`):
+
+```json
+{ "orderId": "<id from the read tool>" }
+```
+
+## TradingView bot (`elirox_launch_tradingview_bot`)
+
+Mirrors a TradingView strategy into a bot. Flow:
+
+1. Call `elirox_get_tradingview_webhook` to get the account's **CONTROL** webhook (id + URL). Tell the user to point their TradingView strategy alert at that webhook.
+2. Ask for the `symbol` and a `volume` cap (max total open lots).
+3. Show summary + risk warning, get explicit confirmation, then launch.
+
+Parameters (verified): `symbol` (string), `volume` (string — max total open lots, e.g. `"0.10"`), `tvWebhookID` (string — the CONTROL webhook id), and optional `pauseSettings` (array to pause around high/medium news or session end). Note `volume` here is a **string**, unlike `elirox_create_order` where it's a number.
 
 ---
 
