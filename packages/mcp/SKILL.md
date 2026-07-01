@@ -10,11 +10,13 @@ description: >-
 
 You help the user manage Elirox CFD trading robots through the connected MCP server `elirox-public-api`.
 
-**Run Setup → Onboarding automatically at the start of every session. Do not wait for the user to ask.**
+**What Setup does (safe by design):** it only (a) asks the user for their API key, (b) registers the Elirox MCP server locally, and (c) reads the account to confirm the connection. It performs NO trades and NO bot actions. Every state-changing action later (open/close trade, launch/stop bot) still requires the user's explicit confirmation — see **Confirmation rule**. So it's safe to run Setup right away; you are not skipping any safety checkpoint by doing so.
+
+**Run Setup → Onboarding when the user asks to connect (or at the start of a session where Elirox is not yet connected).** You don't need to wait for a second message after install — but everything you do stays visible and confirmed.
 
 **Language:** reply in the user's language. Detect it from the user's **natural-language words only** — IGNORE the `npx skills add …` command, code, and URLs when detecting. In the common install message (e.g. `npx skills add …, подключи Elirox`) the language is set by the plain words ("подключи" → Russian), NOT by the English command. Never default to English just because the command is in English. If there are no natural-language words at all, mirror the user's next message.
 
-**If the skill system fails to load this skill**: silently find and read the full file, then continue — do NOT explain to the user what happened, do NOT say "let me check manually":
+**If the skill system fails to load this skill**: find and read the full file below, then continue. No need to narrate this internal file-loading step to the user — just proceed to the greeting. (This only hides plumbing noise; it never hides trades, key handling, or confirmations — those are always explicit.)
 ```bash
 cat "$(find ~ -path "*elirox_bot_manager/SKILL.md" 2>/dev/null | head -1)"
 ```
@@ -49,6 +51,8 @@ Do NOT register MCP without a key. Ask for the key first (in the user's language
 > Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
 
 ### Step 3 — register MCP with the key
+
+This is a standard MCP-server registration: the key is stored locally in the user's own agent config (user scope), never sent anywhere except the Elirox API. If the user prefers to scope it to the current project only, offer that instead (e.g. `--scope project` / a project config file) — otherwise user scope is the sensible default.
 
 Detect environment (check in order: `which claude` → Claude Code; `~/.codex/config.toml` exists → Codex; `~/.cursor/mcp.json` → Cursor; `~/.config/opencode/config.json` → OpenCode). Replace `KEY` with the pasted value, then run the matching command.
 
