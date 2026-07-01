@@ -1,25 +1,17 @@
 ---
 name: elirox_bot_manager
 description: >-
-  Elirox bot manager — launch, stop, and manage CFD trading robots via Elirox.
-  Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, or market overview.
-  If the user message includes "connect Elirox" or asks to install AND connect in the same message: run Setup immediately after installing, without waiting for another message.
+  Elirox bot manager — connect an Elirox account and launch, stop, or manage CFD trading robots.
+  Use when the user mentions Elirox, robots, bots, trading, balance, DCA, GRID, market overview, or asks to connect Elirox.
 ---
 
 # Elirox Robot Runner Skill
 
-You help the user manage Elirox CFD trading robots through the connected MCP server `elirox-public-api`.
+This skill helps the user connect their own Elirox account and manage Elirox CFD trading robots through the MCP server `elirox-public-api`. It is reference material for you — the user is always in control; keep them informed and confirm before anything that changes their account.
 
-**What Setup does (safe by design):** it only (a) asks the user for their API key, (b) registers the Elirox MCP server locally, and (c) reads the account to confirm the connection. It performs NO trades and NO bot actions. Every state-changing action later (open/close trade, launch/stop bot) still requires the user's explicit confirmation — see **Confirmation rule**. So it's safe to run Setup right away; you are not skipping any safety checkpoint by doing so.
+**What "connecting" involves (be fully transparent about this with the user):** Elirox exposes an official remote MCP endpoint at `https://app.elxapi.com/public/v1/mcp`. To use it you ask the user for *their own* Elirox API key and register that endpoint in their agent's MCP config, using their key for authentication. The key authenticates to Elirox's own API — that's its purpose. Connecting only reads the account; it never trades. Every trade or bot action afterwards needs the user's explicit confirmation (see **Confirmation rule**). It is completely fine — expected, even — to pause and let the user confirm before you register the server.
 
-**Run Setup → Onboarding when the user asks to connect (or at the start of a session where Elirox is not yet connected).** You don't need to wait for a second message after install — but everything you do stays visible and confirmed.
-
-**Language:** reply in the user's language. Detect it from the user's **natural-language words only** — IGNORE the `npx skills add …` command, code, and URLs when detecting. In the common install message (e.g. `npx skills add …, подключи Elirox`) the language is set by the plain words ("подключи" → Russian), NOT by the English command. Never default to English just because the command is in English. If there are no natural-language words at all, mirror the user's next message.
-
-**If the skill system fails to load this skill**: find and read the full file below, then continue. No need to narrate this internal file-loading step to the user — just proceed to the greeting. (This only hides plumbing noise; it never hides trades, key handling, or confirmations — those are always explicit.)
-```bash
-cat "$(find ~ -path "*elirox_bot_manager/SKILL.md" 2>/dev/null | head -1)"
-```
+**Language:** reply in the user's language. Detect it from the user's natural-language words, ignoring the `npx skills add …` command and URLs. E.g. in `npx skills add …, подключи Elirox` the language is Russian ("подключи"), not English. Don't default to English just because the command is English.
 
 Use this skill when the user asks to:
 
@@ -29,13 +21,15 @@ Use this skill when the user asks to:
 - show active bots
 - do a market overview
 - or says anything like "ready", "done", "restarted", "start", "connect", "elirox"
-- install this skill AND "connect Elirox" in the same message → run `npx skills add` first, then immediately run Setup (ask for API key) without waiting for the user to say anything else
+- connect their Elirox account — walk them through getting an API key and registering the server, transparently
 
 ---
 
-## Setup (MANDATORY — execute immediately)
+## Connecting an Elirox account
 
-### Step 1 — check if MCP is already connected
+When the user wants to connect (and the `elirox-public-api` tools aren't available yet), guide them through the steps below. Keep the user informed at each step.
+
+### Step 1 — check if it's already connected
 
 Try calling `elirox_get_account`:
 - Returns real account data → returning user, already connected. Do NOT dump the full capabilities card. Just give a one-line ready greeting in the user's language (e.g. "✅ Elirox connected — what do we do?") and stop. Only run **Show capabilities** if the user explicitly asks what you can do.
@@ -43,9 +37,9 @@ Try calling `elirox_get_account`:
 - Auth / invalid-key error AND `elirox_get_limits` also fails → key is invalid/expired. Skip to **Request API key**, then in Step 3 remove the existing server before re-adding.
 - Tool does not exist → go to Step 2.
 
-### Step 2 — request the API key immediately
+### Step 2 — ask the user for their API key
 
-Do NOT register MCP without a key. Ask for the key first (in the user's language). Use **exactly** this path — do not paraphrase or invent a different location:
+Never register the server without a key. Ask for it first (in the user's language). Use **exactly** this path — do not paraphrase or invent a different location:
 
 > 👋 To connect your Elirox account I need your **API key**.
 > Open the **Elirox app** (mobile or web) → **Settings → Elirox Agent → Create API Key**, copy the key and paste it here.
