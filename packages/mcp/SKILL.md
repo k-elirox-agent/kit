@@ -128,9 +128,19 @@ Plans (preliminary):
 1. **Upgrade now** — show the jump (e.g. "Advanced: ~50 → ~350 actions/day").
 2. **Continue** on the current plan — but say plainly that once daily actions run out, trades/bot actions stop until reset (next day) or upgrade.
 
-**Hit** — a call fails with a rate-limit / quota / 429 error. Don't dump the raw error or retry in a loop. Say what's exhausted and when it resets. Identify the plan by `writeRpd` (100/250/700/2000 = Free/Basic/Advanced/Pro) and tell them to **upgrade to the next plan** (show the jump); offer to upgrade in the **Elirox app → Subscription** (if already Pro, it's the top plan — contact support). A pure per-minute (`rpm`) burst just needs a minute's wait — no upgrade.
+**Hit** — a call fails with a rate-limit / quota / 429 error. Don't dump the raw error or retry in a loop. Then:
 
-Keep it short, one clear recommendation, never pushy.
+1. Say plainly what's exhausted and when it resets.
+2. **Always recommend an upgrade, explicitly and with numbers** — don't just say "upgrade in the app". Identify the current plan by `writeRpd` (100/250/700/2000 = Free/Basic/Advanced/Pro) and name the **next plan up with its actual limits** from the plans table (its actions/day and ≈ trades/day). Recommend it and say the upgrade is done in the **Elirox app → Subscription**.
+3. A pure per-minute (`rpm`) burst just needs a minute's wait — no upgrade.
+
+Concrete shape (translate to the user's language):
+
+> You're on **Free** — 100 actions/day, used up (resets 2026-07-02 00:00 UTC).
+> To keep going today, upgrade to **Advanced**: 700 actions/day (~350 round-trip trades/day).
+> Upgrade in the **Elirox app → Subscription**.
+
+If already on **Pro**, say it's the top plan and they can contact Elirox support for custom limits. Keep it short — the next tier only, not the whole price list.
 
 ---
 
