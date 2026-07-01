@@ -11,7 +11,7 @@ Reference for connecting a user's Elirox account and managing Elirox CFD trading
 
 **Connecting, transparently:** Elirox has an official remote MCP endpoint `https://app.elxapi.com/public/v1/mcp`. To connect, you ask the user for *their own* Elirox API key and register that endpoint in their agent's MCP config, using the key to authenticate against Elirox's own API. Connecting only reads the account — it never trades. It's fine to pause for the user to confirm before registering.
 
-**Language:** reply in the user's language, detected from their natural-language words (ignore the `npx skills add …` command and URLs). E.g. in `npx skills add …, подключи Elirox` → Russian. Don't default to English just because the command is English.
+**Language:** reply in the user's language, detected from their natural-language words (ignore the `npx skills add …` command and URLs). E.g. in `npx skills add …, подключи Elirox` → Russian. Don't default to English just because the command is English. **Translate EVERYTHING you output into that language** — card labels (Balance, Available to robots, Limit, What I can do, Try this, permission names), summaries, notes, and the risk warning. All English text in this file is a template to translate, never to copy verbatim. Never mix languages in one message.
 
 ---
 
@@ -150,7 +150,7 @@ Never launch immediately. Sequence:
 
 1. Read account (skip in Privacy mode — ask the amount instead) → `elirox_get_limits` → resolve symbol via `elirox_get_assets`.
 2. Ask for missing params: strategy (DCA / GRID); direction (LONG / SHORT; GRID also REVERSAL); amount + unit (`ACCOUNT_CURRENCY` or `LOTS`); preset type (conservative / optimal / aggressive). For a recommendation use `preset:"ai"`, `presetType:"conservative"`.
-3. Show the summary: balance & available funds, symbol/strategy/direction, budget + unit, preset, entry mode (DCA only), and a risk warning (CFD trading can lose money).
+3. Show the summary: balance & available funds, symbol/strategy/direction, budget + unit, preset, entry mode (DCA only), and one short risk line (see **Risk warning**).
 4. Confirm (see **Confirmation rule**), then call the launch tool.
 
 DCA params (GRID = the same **without** `entryMode`):
@@ -163,7 +163,7 @@ DCA params (GRID = the same **without** `entryMode`):
 
 ## Opening / closing a trade
 
-Never place an order immediately. Sequence: read account (skip in Privacy mode — ask the amount) → resolve symbol → optionally `elirox_get_last_price` to show the price → gather params → show the summary (symbol, side, volume, order type, price/limit, SL/TP, risk warning) → confirm → `elirox_create_order` / `elirox_close_order` / `elirox_cancel_order`.
+Never place an order immediately. Sequence: read account (skip in Privacy mode — ask the amount) → resolve symbol → optionally `elirox_get_last_price` to show the price → gather params → show the summary (symbol, side, volume, order type, price/limit, SL/TP, and one short risk line — see **Risk warning**) → confirm → `elirox_create_order` / `elirox_close_order` / `elirox_cancel_order`.
 
 `elirox_create_order` (required: `symbol`, `type`, `volume`; live schema wins if it ever differs):
 - `type` — `ORDER_TYPE_BUY` / `ORDER_TYPE_SELL` (market) or `ORDER_TYPE_LIMIT_BUY` / `ORDER_TYPE_LIMIT_SELL` (limit)
@@ -200,6 +200,10 @@ Valid: "yes", "confirm", "launch", "go", "do it", or the equivalent in any langu
 
 ---
 
+## Risk warning
+
+Include one short risk line (that CFD trading can lose money), **in the user's language**, ONLY in the pre-execution confirmation summary. Do NOT repeat it on result messages, status updates, read answers, or the onboarding card — one mention per action, not on every message.
+
 ## Safety
 
-Always: warn that CFD trading can lose money; prefer conservative defaults when recommending; know every parameter before executing. Never: promise profit or guaranteed returns; default to aggressive risk; or invent balances, symbols, order/bot ids, or profits.
+Always: prefer conservative defaults when recommending; know every parameter before executing; confirm before any state-changing action. Never: promise profit or guaranteed returns; default to aggressive risk; or invent balances, symbols, order/bot ids, or profits.
