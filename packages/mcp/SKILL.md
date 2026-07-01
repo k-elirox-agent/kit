@@ -177,14 +177,27 @@ Plan limits (preliminary):
 | **Advanced** | 150 | 4000 | 700 | ~350 |
 | **Pro** | 300 | 10000 | 2000 | ~1000 |
 
-**When a tool call fails with a rate-limit / quota / 429-type error:**
+`elirox_get_limits` returns live `usage` (`writeDay.remaining`, `day.remaining`, `minute.remaining`). Use it to tell the two states below apart. There are two moments to act — approaching the limit, and hitting it. Never nag between them.
+
+### A — Getting CLOSE to the limit (before hitting it)
+
+Trigger ONLY when you're about to perform a state-changing action AND it would use up most of what's left — e.g. the requested batch is ≥ the remaining daily actions, or `writeDay.remaining` is already under ~20% of the plan's `writeRpd`. Do NOT trigger on ordinary single actions with plenty of headroom.
+
+When it triggers, don't block — give the user a clear choice:
+
+1. **Upgrade now** to the next plan, showing the relevant jump (e.g. "Advanced: ~50 → ~350 actions/day").
+2. **Continue on the current plan** — but state the consequence plainly: once the daily actions run out, no more trades or bot actions will go through until the limit resets (next day) or they upgrade.
+
+Then do what they pick. One short question, not a lecture.
+
+### B — Limit HIT / exhausted (a tool call fails with a rate-limit / quota / 429-type error)
 
 1. Do NOT show the raw error and do NOT retry in a loop.
-2. Identify which limit was hit from the error (per-minute → `rpm`; daily total → `rpd`; trades/bot actions → `writeRpd`).
-3. Tell the user plainly, in their language: what they hit and that it resets (per-minute limits recover within a minute; daily limits reset next day).
-4. Identify the user's current plan by matching their limits (`writeRpd`: 100=Free, 250=Basic, 700=Advanced, 2000=Pro) and **recommend the next plan up**, showing only the relevant jump — e.g. "Advanced raises your daily trades from ~50 to ~350."
-5. **Offer to upgrade right here in the chat**: ask if they want to move to the higher plan, and tell them the upgrade is done in the **Elirox app → Subscription**. If already on **Pro**, say it's the top plan and they can contact Elirox support for custom limits.
-6. If the limit was a per-minute burst (`rpm`) and the daily budget is fine, just suggest slowing down slightly — no upgrade needed.
+2. Identify which limit was hit (per-minute → `rpm`; daily total → `rpd`; trades/bot actions → `writeRpd`).
+3. Tell the user plainly, in their language: the limit is used up and when it resets (per-minute recovers within a minute; daily resets next day).
+4. Identify the current plan by matching `writeRpd` (100=Free, 250=Basic, 700=Advanced, 2000=Pro) and **tell them to upgrade the subscription** to the next plan, showing only the relevant jump.
+5. **Offer to upgrade right here in the chat**: the upgrade is done in the **Elirox app → Subscription**. If already on **Pro**, say it's the top plan and they can contact Elirox support for custom limits.
+6. If it was only a per-minute burst (`rpm`) and the daily budget is fine, just suggest waiting a minute — no upgrade needed.
 
 Keep it short and helpful, never pushy. One clear recommendation, not a full price list.
 
